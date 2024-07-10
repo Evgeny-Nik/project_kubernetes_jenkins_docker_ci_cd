@@ -4,6 +4,7 @@
 !*.yaml
 !*.tf
 !version.txt
+!requirements.txt
 !.gitignore
 !Jenkinsfile_init
 !Jenkinsfile_ci
