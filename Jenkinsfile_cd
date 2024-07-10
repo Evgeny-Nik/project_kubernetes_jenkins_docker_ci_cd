@@ -5,6 +5,7 @@ pipeline {
         GIT_REPO = 'https://github.com/Evgeny-Nik/project_kubernetes_jenkins_docker_ci_cd.git'
         GIT_BRANCH = 'master'
         GIT_CRED_ID = 'kubernetes_jenkins_docker_github_user_token'
+        MANIFEST_DIR = 'k8s_files'
         MANIFEST_PATH = 'k8s_files/deployment.yaml'
         AWS_REGION = 'eu-north-1'
         EKS_CLUSTER_NAME = 'pc-eks'
@@ -21,14 +22,9 @@ pipeline {
         stage('Read Replicas from Deployment YAML') {
             steps {
                 script {
-                    def replicas
-                    // Read replicas from YAML file
-                    try {
-                        replicas = sh(script: "yq eval '.spec.replicas' ${MANIFEST_PATH}", returnStdout: true).trim()
-                    } catch (Exception e) {
-                        error "Failed to read replicas from ${MANIFEST_PATH}: ${e.message}"
-                    }
-                    
+                    def yamlContent = readYaml(file: MANIFEST_PATH)
+                    def replicas = yamlContent.spec.replicas
+
                     // Check if replicas value is valid
                     if (!replicas.isInteger()) {
                         error "Replicas value (${replicas}) is not a valid integer."
@@ -45,26 +41,16 @@ pipeline {
                 withAWS(credentials: 'eks-admin', region: AWS_REGION) {
                     sh """
                     aws eks update-kubeconfig --region ${AWS_REGION} --name ${EKS_CLUSTER_NAME}
-                    kubectl get nodes
+                    kubectl apply -f ${MANIFEST_DIR}
                     """
                 }
-            }
-        }
-
-        stage('Scale Application') {
-            steps {
-                echo "Scaling the deployment to ${replicas} replicas"
-                sh """
-                    kubectl scale deployment ${DEPLOYMENT_NAME} --replicas=${replicas}
-                    kubectl rollout status deployment/${DEPLOYMENT_NAME}
-                """
             }
         }
 
         stage('Verify Deployment') {
             steps {
                 sh '''
-                    kubectl get deploy,pods -o wide
+                    kubectl get deploy,pods,service,ingress -o wide
                 '''
             }
         }
