@@ -94,7 +94,7 @@ pipeline {
                         withCredentials([usernamePassword(credentialsId: "${GIT_CRED_ID}", usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
                             def deployment = readYaml file: 'deployment.yaml'
                             deployment.spec.template.spec.containers[0].image = "${DOCKERHUB_USER}/kubernetes_weather_app:${NEW_VERSION}"
-                            writeYaml file: 'deployment.yaml', data: deployment
+                            writeYaml file: 'deployment.yaml', data: deployment, overwrite: true
 
                             sh """
                                 git add deployment.yaml
