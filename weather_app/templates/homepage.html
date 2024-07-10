@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>WeatherApp</title>
+    <meta charset="UTF-8">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="static/styles.css">
+</head>
+
+
+<body>
+<div class="container-fluid p-5 text-white text-center">
+    <form method="POST" action="{{ url_for('render_page') }}">
+        <h1>Welcome to my Weather App</h1>
+        <p>Insert location name:</p>
+        <p><input type="text" name="city_name" required/> <input type="submit" value=&#x1F50E; /></p>
+    </form>
+</div>
+
+{% if data_list %}
+<div class="container">
+    <h1 class="text-center" id="forecast">Forecast for: {{ data_list[0] }}</h1>
+    <div class="card-group">
+        {% for index in range(1, 8) %}
+        <div class="card bg-light p-2 text-dark bg-opacity-50">
+            <img src="https://raw.githubusercontent.com/Evgeny-Nik/weather_icons/main/{{data_list[index]['day_icon']}}.svg"
+                 onerror="this.src='https://raw.githubusercontent.com/Evgeny-Nik/weather_icons/main/error_icon.svg';this.onerror='';"
+                 class="card-img-top" alt="Weather Icon {{data_list[index]['day_icon']}}"/>
+            <div class="card-body">
+                <p class="text-center">{{ data_list[index]['day'] }}</p>
+                <p class="text-center">{{ data_list[index]['date'] }}</p>
+                <p class="text-center">day: {{ data_list[index]['day_temp'] }}C°</p>
+                <p class="text-center">night: {{ data_list[index]['night_temp'] }}C°</p>
+                <p class="text-center">humidity: {{ data_list[index]['humidity'] }}%</p>
+            </div>
+        </div>
+        {% endfor %}
+{% elif error %}
+        <div id="labelHolder">
+            <label id="lblStatus">
+                <h2>{{ error }} for input: {{ city_name }}</h2>
+            </label>
+        </div>
+{% endif %}
+    </div>
+</div>
+</body>
+</html>

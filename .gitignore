@@ -3,6 +3,8 @@
 !*.py
 !*.yaml
 !*.tf
+!*.html
+!*.css
 !version.txt
 !requirements.txt
 !.gitignore

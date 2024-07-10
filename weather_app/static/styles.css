@@ -1,0 +1,36 @@
+body {
+/* this style is used to fix background image format */
+    background-image: url('https://raw.githubusercontent.com/Evgeny-Nik/weather_icons/main/weather.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    height: 100vh;
+    width: 100vw;
+}
+
+.container-fluid {
+/* this style is used to to change a container's background color and adding a bottom border */
+    background-color: #57a0ee;
+    border-bottom: 4px solid white;
+}
+
+.btn-primary{
+/* this style is used to to change a button's background color */
+    background-color: #57a0ee !important;
+    border-color: #ffffff !important;
+}
+
+#labelHolder {
+/* this style is used to to change alignment of a label */
+    text-align:center;
+    vertical-align:middle;
+}
+
+#labelHolder #lblStatus {
+/* this style is used to to change alignment of a label */
+    margin: auto;
+    position: absolute;
+    top: 50%;
+    left: 0;
+    bottom: 0;
+    right: 0;
+}
