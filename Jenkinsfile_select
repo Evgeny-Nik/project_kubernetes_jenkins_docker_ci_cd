@@ -31,7 +31,7 @@ pipeline {
                         filePath.startsWith('weather_app/') || filePath == 'Jenkinsfile_ci'
                     }
 
-                    def shouldTriggerPipelineA = changeLog.any { filePath ->
+                    def shouldTriggerPipelineB = changeLog.any { filePath ->
                         filePath.startsWith('k8s_files/') || filePath == 'Jenkinsfile_cd'
                     }
 
