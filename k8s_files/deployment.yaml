@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
       - name: weatherapp
-        image: evgenyniko/kubernetes_weather_app:1.0.19
+        image: evgenyniko/kubernetes_weather_app:1.0.20
         imagePullPolicy: Always
         ports:
         - containerPort: 8000
