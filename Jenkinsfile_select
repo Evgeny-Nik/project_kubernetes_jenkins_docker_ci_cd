@@ -28,7 +28,9 @@ pipeline {
 
                     echo "Changed files: ${changeLog}"
 
-                    def shouldTriggerPipelineA = !changeLog.contains(VERSION_FILE) && changeLog.any { filePath ->
+                    def isOnlyVersionFileChanged = changeLog.size() == 1 && changeLog.contains(VERSION_FILE)
+
+                    def shouldTriggerPipelineA = !isOnlyVersionFileChanged && changeLog.any { filePath ->
                         filePath.startsWith('weather_app/') || filePath == 'Jenkinsfile_ci'
                     }
 
@@ -40,7 +42,7 @@ pipeline {
                         build job: "${PIPELINE_A}", wait: true
                     }
 
-                    else if (shouldTriggerPipelineB) {
+                    if (shouldTriggerPipelineB) {
                         build job: "${PIPELINE_B}", wait: true
                     }
 
