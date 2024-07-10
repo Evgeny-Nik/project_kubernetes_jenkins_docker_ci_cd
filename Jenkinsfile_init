@@ -1,0 +1,67 @@
+pipeline {
+    agent any
+
+    environment {
+        GIT_REPO = 'https://github.com/Evgeny-Nik/project_kubernetes_jenkins_docker_ci_cd.git'
+        GIT_BRANCH = 'master'
+        GIT_CRED_ID = 'kubernetes_jenkins_docker_github_user_token'
+        AWS_ACCESS_KEY_ID = credentials('aws-access-key-id')
+        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
+        AWS_DEFAULT_REGION = 'eu-north-1'
+        TF_VAR_region = 'en-north-1'
+        TF_VAR_cluster_name = 'my-eks'
+        TF_BACKEND_BUCKET = credentials('tf-kubernetes-jenkins-docker-bucket')
+        TF_BACKEND_KEY = credentials('tf-kubernetes-jenkins-docker-key')
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: "${GIT_BRANCH}", credentialsId: "${GIT_CRED_ID}", url: "${GIT_REPO}"
+                dir('tf_files') {
+                    withCredentials([file(credentialsId: '.env-file', variable: 'ENV_FILE')]) {
+                        writeFile file: '.env', text: readFile(ENV_FILE)
+                    }
+                }
+            }
+        }
+
+        stage('Terraform Init') {
+            steps {
+                sh """
+                    terraform init \
+                    -backend-config="bucket=${TF_BACKEND_BUCKET}" \
+                    -backend-config="key=${TF_BACKEND_KEY}"
+                """
+            }
+        }
+
+        stage('Terraform Plan') {
+            steps {
+                sh 'terraform plan -out=tfplan'
+            }
+        }
+
+        stage('Terraform Apply') {
+            steps {
+                sh 'terraform apply -auto-approve -input=false tfplan'
+            }
+        }
+
+        stage('Post Apply') {
+            steps {
+                script {
+                    // Get the EKS cluster name from Terraform output
+                    def clusterName = sh(script: 'terraform output -raw cluster_name', returnStdout: true).trim()
+                    echo "EKS Cluster '${clusterName}' created successfully."
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}
