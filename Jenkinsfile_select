@@ -1,0 +1,59 @@
+pipeline {
+    agent any
+
+    environment {
+        GIT_REPO = 'https://github.com/Evgeny-Nik/project_kubernetes_jenkins_docker_ci_cd.git'
+        GIT_BRANCH = 'master'
+        GIT_CRED_ID = 'kubernetes_jenkins_docker_github_user_token'
+        PIPELINE_A = 'kubernetes_jenkins_docker_ci'
+        PIPELINE_B = 'kubernetes_jenkins_docker_cd'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: "${GIT_BRANCH}", credentialsId: "${GIT_CRED_ID}", url: "${GIT_REPO}"
+            }
+        }
+
+        stage('Determine Changed Files') {
+            steps {
+                script {
+                    def changeLog = currentBuild.changeSets.collect { changeSet ->
+                        changeSet.items.collect { item ->
+                            item.affectedFiles.collect { it.path }
+                        }
+                    }.flatten()
+
+                    echo "Changed files: ${changeLog}"
+
+                    def shouldTriggerPipelineA = changeLog.any { filePath ->
+                        filePath.startsWith('weather_app/') || filePath == 'Jenkinsfile_ci'
+                    }
+
+                    def shouldTriggerPipelineA = changeLog.any { filePath ->
+                        filePath.startsWith('k8s_files/') || filePath == 'Jenkinsfile_cd'
+                    }
+
+                    if (shouldTriggerPipelineA) {
+                        build job: "${PIPELINE_A}", wait: true
+                    }
+
+                    else if (shouldTriggerPipelineB) {
+                        build job: "${PIPELINE_B}", wait: true
+                    }
+
+                    if (!shouldTriggerPipelineA && !shouldTriggerPipelineB) {
+                        echo "No relevant changes detected."
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}
