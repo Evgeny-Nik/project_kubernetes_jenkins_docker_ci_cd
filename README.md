@@ -1,175 +1,72 @@
-Sure, here is the README updated to reflect your specific project requirements:
+# Kubernetes + Jenkins CI/CD Project for a Containerized Weather App
 
----
+## Project Overview
 
-# CI/CD Project for Containerized Weather App
+This project demonstrates a CI/CD pipeline using Jenkins, Docker, and Kubernetes. \
+It involves setting up an EKS cluster with Terraform, deploying a Containerized application, and managing Kubernetes deployments. \
+The goal is to provide a robust pipeline for continuous integration and continuous deployment.
 
-## Source Code
-The project uses a GitLab repository: \
-[Weather App Repository](ssh://git@172.31.32.98:50/majestic_potatoes/weather_app.git)
+## Application
+This project uses a Flask weather application that communicates with http requests to a remote REST API (visualcrossing). \
+Exposed on kubernetes through ClusterIp and Ingress.
 
-## Jenkins CI/CD Stages
-This Jenkins pipeline automates the process of building, tagging, and pushing a Docker image of a Python application, provisioning an AWS EKS cluster using Terraform, deploying the Docker image to EKS, and making the application accessible via an ingress.
+## Jenkins Agent Requirements
 
-## Workflow Overview
+- **Docker**: [Install Docker](https://docs.docker.com/get-docker/)
+- **Kubernetes**: [Install kubectl](https://kubernetes.io/docs/tasks/tools/)
+- **Jenkins**: [Install Jenkins](https://www.jenkins.io/doc/book/installing/)
+- **Terraform**: [Install Terraform](https://www.terraform.io/downloads.html)
+- **AWS CLI**: [Install AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
 
-### Trigger:
-The workflow is triggered via a webhook.
 
-## Pipelines:
-The Jenkins pipeline consists of two main pipelines:
+### Configure Jenkins
 
-1. **Build and Deploy**: This pipeline handles the following tasks:
-   - Builds the Docker image from the GitLab repository.
-   - Pushes the Docker image to Docker Hub.
-   - Updates the `deployment.yaml` file with the new Docker image name.
-   - Deploys the Docker image to the EKS cluster.
-   - Makes the application accessible via ingress.
+Set up Jenkins with the necessary plugins for Docker, Kubernetes, AWS, and GitHub. \
+Add your pipelines in Jenkins using the provided Jenkinsfiles.
 
-2. **Scale Application**: This pipeline adjusts the number of replicas for the deployed application in the EKS cluster.
+## Jenkins Pipelines Overview
+There are a total of 4 Jenkins Pipelines
+- init: handles the initialization and provisioning of the AWS infrastructure using Terraform.
+- select: triggered via github webhook, determines which subsequent pipeline (CI or CD) to trigger based on the changes detected in the repository.
+- ci: handles the continuous integration process (and delivery), including building, testing, and pushing Docker images.
+- cd: handles the continuous deployment process, deploying the Docker images to the Kubernetes cluster, exposing them through Ingress.
 
-## Steps
+## Pipeline Steps
 
-### 1. Pipeline - Build and Deploy
+### `init`
 
-- **Clean Workspace**:
-  - Cleans up the workspace and removes any existing Docker containers and images.
+- **Checkout**: Clones the repository from GitHub.
+- **Terraform Init**: Initializes Terraform in the `tf_files` directory.
+- **Terraform Plan**: Creates a Terraform execution plan.
+- **Terraform Apply**: Applies the Terraform plan to provision the infrastructure.
+- **Post Apply**: Retrieves and displays the EKS cluster name from Terraform output.
 
-- **Prepare Workspace**:
-  - Checks out the repository from GitLab.
-  - Loads environment variables from a `.env` file.
+### `select`
 
-- **Build Docker Image**:
-  - Builds the Docker image using the specified Dockerfile.
-  - Tags the Docker image with the build number and latest tag.
+- **Checkout**: Clones the repository from GitHub.
+- **Determine Changed Files**: Analyzes the changes in the repository to decide which pipeline to trigger.
+  - Triggers the CI pipeline if changes are detected in the application or CI-related files.
+  - Triggers the CD pipeline if changes are detected in the deployment or CD-related files.
+  - If no relevant changes are detected, no pipelines are triggered.
 
-- **Push Docker Image to Docker Hub**:
-  - Logs in to Docker Hub using credentials.
-  - Pushes the newly built Docker image to Docker Hub.
+### `ci`
 
-- **Deploy to EKS**:
-  - Updates the `deployment.yaml` file with the new Docker image name.
-  - Applies the updated deployment file to the EKS cluster using `kubectl`.
-  - Makes the application accessible via ingress.
+- **Clean Workspace**: Cleans the Jenkins workspace and removes any existing Docker containers and images.
+- **Prep Workspace**: Clones the repository and sets up the application environment.
+- **Increment Version**: Increments the application version and pushes the changes to the repository.
+- **Build Docker Image**: Builds the Docker image and tags it with the new version and `latest`.
+- **Test Application**: Runs tests on the Docker container to ensure the application works as expected.
+- **Push Docker Image**: Pushes the Docker image to DockerHub (Delivery).
+- **Edit Manifest Files**: Updates the Kubernetes deployment manifest with the new Docker image version and pushes the changes to the repository.
 
-### 2. Pipeline - Scale Application
+### `cd`
 
-- **Update Replicas**:
-  - Uses the specified parameter to set the desired number of replicas for the deployment.
-
-## Jenkinsfile for Build and Deploy Pipeline
-
-```groovy
-pipeline {
-    agent any
-
-    stages {
-        stage('clean') {
-            steps {
-                sh '''
-                    rm -rf ~/workspace/kubernetes_jenkins_docker_project/*
-                    docker 2>/dev/null rm -f $(docker ps -aq) | true
-                    docker 2>/dev/null rmi $(docker images -aq) | true
-                '''
-            }
-        }
-        stage('Prep workspace') {
-            steps {
-                git branch: 'master', credentialsId: 'gitlab-ssh', url: 'ssh://git@172.31.32.98:50/majestic_potatoes/weather_app.git'
-                dir('weather_app') {
-                    withCredentials([file(credentialsId: '.env-file', variable: 'ENV_FILE')]) {
-                        writeFile file: '.env', text: readFile(ENV_FILE)
-                    }
-                }
-            }
-        }
-        stage('Build Containers') {
-            steps {
-                sh '''docker-compose up --build -d
-                docker ps -a
-                docker images
-                ls -la'''
-            }
-        }
-        stage('Test') {
-            steps {
-                sh 'python3 weather_app/tests/website_connectivity_unittest.py'
-            }
-        }
-        stage('Upload Container') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub_creds', usernameVariable: 'HUB_USER', passwordVariable: 'HUB_TOKEN')]) {
-                    sh '''
-                        echo $HUB_TOKEN | docker login -u $HUB_USER --password-stdin
-                        docker images
-                        docker tag kubernetes_jenkins_docker_project-weather_app $HUB_USER/helm_weather_app:$BUILD_NUMBER
-                        docker tag kubernetes_jenkins_docker_project-nginx $HUB_USER/nginx_weather:v1
-                        docker images
-                        docker push $HUB_USER/helm_weather_app:$BUILD_NUMBER
-                        docker push $HUB_USER/nginx_weather:v1
-                        docker logout
-                    '''
-                }
-            }
-        }
-        stage('Deploy to EKS') {
-            steps {
-                withAWS(credentials: 'eks-admin', region: 'eu-north-1') {
-                    sh '''
-                    aws eks update-kubeconfig --region eu-north-1 --name pc-eks
-                    kubectl get nodes
-                    '''
-                    sh '''
-                        yq -i '.spec.template.spec.containers.[].image = "evgenyniko/helm_weather_app:"+strenv(BUILD_NUMBER)' k8s_files/deployment.yml
-                        cat k8s_files/deployment.yml
-                        kubectl apply -f k8s_files/deployment.yml
-                        kubectl get svc,ingress,deploy,pods
-                    '''
-                }
-            }
-        }
-    }
-}
-```
-
-## Multi-Stage Dockerfile
-
-### Build and Tag Image
-
-```bash
-docker build -t ${DOCKERHUB_USERNAME}/weather_app:${{env.BUILD_NUMBER}} .
-```
-
-### Inside Dockerfile
-
-#### Arguments & Environment Variables
-
-`ENV APP_VERSION` - Get argument for image building
-
-#### Dockerfile Stages
-
-```dockerfile
-FROM python:alpine3.19
-
-WORKDIR /home/weather_app_user
-
-COPY ./requirements.txt .
-
-RUN pip3 install --no-cache-dir -r requirements.txt
-
-COPY . .
-
-CMD ["python3", "-m", "gunicorn", "-w", "4", "-b", "0.0.0.0:8000", "wsgi:app"]
-```
+- **Check Changes**: Clones the repository from GitHub.
+- **Read Replicas from Deployment YAML**: Reads the number of replicas from the Kubernetes deployment YAML file.
+- **Configure AWS and Kubernetes**: Configures AWS and Kubernetes settings and applies the Kubernetes manifests to deploy the application.
 
 ## Versioning Logic
 The project adheres to semantic versioning (Major.Minor.Patch) to ensure a structured and predictable versioning system.
 
 ## Links
-
-- [Weather App Repository](ssh://git@172.31.32.98:50/majestic_potatoes/weather_app.git)
-- [DockerHub Project Registry](https://hub.docker.com/repository/docker/${DOCKERHUB_USERNAME}/weather_app)
-
----
-
-This README provides an overview of the CI/CD pipeline setup in Jenkins, including the steps for building and deploying the Docker image, as well as the multi-stage Dockerfile used in the process. Adjust the placeholders such as `${DOCKERHUB_USERNAME}` and repository URLs as per your project specifics.hi
+- [DockerHub Project Registry](https://hub.docker.com/repository/docker/evgenyniko/kubernetes_weather_app)
