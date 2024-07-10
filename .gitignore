@@ -1,0 +1,13 @@
+*
+!*/
+!*.py
+!*.yaml
+!*.tf
+!version.txt
+!.gitignore
+!Jenkinsfile_init
+!Jenkinsfile_ci
+!Jenkinsfile_cd
+!Jenkinsfile_select
+__pycache__
+.terraform
