@@ -9,5 +9,6 @@
 !Jenkinsfile_ci
 !Jenkinsfile_cd
 !Jenkinsfile_select
+!Dockerfile
 __pycache__
 .terraform
