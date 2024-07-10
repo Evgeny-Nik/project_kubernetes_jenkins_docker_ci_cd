@@ -112,6 +112,7 @@ pipeline {
         always {
             cleanWs()
         }
+        
         success {
             withCredentials([usernamePassword(credentialsId: "${GIT_CRED_ID}", usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
                 dir(APP_DIR) {
