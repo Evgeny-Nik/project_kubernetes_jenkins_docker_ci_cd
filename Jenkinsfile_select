@@ -7,6 +7,7 @@ pipeline {
         GIT_CRED_ID = 'kubernetes_jenkins_docker_github_user_token'
         PIPELINE_A = 'kubernetes_jenkins_docker_ci'
         PIPELINE_B = 'kubernetes_jenkins_docker_cd'
+        VERSION_FILE = 'weather_app/version.txt'
     }
 
     stages {
@@ -27,7 +28,7 @@ pipeline {
 
                     echo "Changed files: ${changeLog}"
 
-                    def shouldTriggerPipelineA = changeLog.any { filePath ->
+                    def shouldTriggerPipelineA = !changeLog.contains(VERSION_FILE) && changeLog.any { filePath ->
                         filePath.startsWith('weather_app/') || filePath == 'Jenkinsfile_ci'
                     }
 

@@ -109,12 +109,5 @@ pipeline {
         always {
             cleanWs()
         }
-        success {
-            script {
-                if (changeLog.contains('k8s_files/deployment.yaml')) {
-                    build job: "${PIPELINE_B}", wait: false
-                }
-            }
-        }
     }
 }
