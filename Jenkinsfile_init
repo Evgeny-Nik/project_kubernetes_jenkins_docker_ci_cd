@@ -19,9 +19,7 @@ pipeline {
             steps {
                 git branch: "${GIT_BRANCH}", credentialsId: "${GIT_CRED_ID}", url: "${GIT_REPO}"
                 dir('tf_files') {
-                    withCredentials([file(credentialsId: '.env-file', variable: 'ENV_FILE')]) {
-                        writeFile file: '.env', text: readFile(ENV_FILE)
-                    }
+                    sh "ls"
                 }
             }
         }
@@ -29,6 +27,7 @@ pipeline {
         stage('Terraform Init') {
             steps {
                 sh """
+                    ls
                     terraform init \
                     -backend-config="bucket=${TF_BACKEND_BUCKET}" \
                     -backend-config="key=${TF_BACKEND_KEY}"
