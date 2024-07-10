@@ -42,22 +42,14 @@ pipeline {
                     sh """
                     aws eks update-kubeconfig --region ${AWS_REGION} --name ${EKS_CLUSTER_NAME}
                     kubectl apply -f ${MANIFEST_DIR}
+                    kubectl get deploy,pods,service,ingress -o wide
                     """
                 }
             }
         }
 
-        stage('Verify Deployment') {
-            steps {
-                sh '''
-                    kubectl get deploy,pods,service,ingress -o wide
-                '''
-            }
-        }
-    }
-
     post {
-        always {
+        cleanup {
             cleanWs()
         }
     }
