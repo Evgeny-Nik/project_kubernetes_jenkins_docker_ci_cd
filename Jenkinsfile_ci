@@ -16,8 +16,8 @@ pipeline {
             steps {
                 cleanWs()
                 sh '''
-                    docker 2>/dev/null rm -f $(docker ps -aq) | true 
-                    docker 2>/dev/null rmi $(docker images -aq) | true
+                    docker 2>/dev/null rm -f $(docker ps -aq) || true 
+                    docker 2>/dev/null rmi $(docker images -aq) || true
                 '''
             }
         }
@@ -94,13 +94,16 @@ pipeline {
             }
         }
 
-        stage('Edit Manifest Files') {
+       stage('Edit Manifest Files') {
             steps {
                 script {
                     dir('k8s_files') {
                         withCredentials([usernamePassword(credentialsId: "${GIT_CRED_ID}", usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+                            def deployment = readYaml file: 'deployment.yaml'
+                            deployment.spec.template.spec.containers[0].image = "${DOCKERHUB_USER}/kubernetes_weather_app:${NEW_VERSION}"
+                            writeYaml file: 'deployment.yaml', data: deployment
+
                             sh """
-                                yq -i '.spec.template.spec.containers.[].image = "${DOCKERHUB_USER}/kubernetes_weather_app:${NEW_VERSION}"' deployment.yaml
                                 git add deployment.yaml
                                 git commit -m "Update image tag in deployment.yaml to ${DOCKERHUB_USER}/kubernetes_weather_app:${NEW_VERSION}"
                                 git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/Evgeny-Nik/project_kubernetes_jenkins_docker_ci_cd.git ${GIT_BRANCH}
