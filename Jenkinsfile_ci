@@ -39,12 +39,21 @@ pipeline {
             steps {
                 script {
                     dir(APP_DIR) {
-                        def version = readFile(VERSION_FILE).trim()
-                        def (major, minor, patch) = version.tokenize('.').collect { it.toInteger() }
-                        patch += 1
-                        def newVersion = "${major}.${minor}.${patch}"
-                        writeFile file: VERSION_FILE, text: newVersion
-                        env.NEW_VERSION = newVersion
+                        withCredentials([usernamePassword(credentialsId: "${GIT_CRED_ID}", usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+                            def version = readFile(VERSION_FILE).trim()
+                            def (major, minor, patch) = version.tokenize('.').collect { it.toInteger() }
+                            patch += 1
+                            def newVersion = "${major}.${minor}.${patch}"
+                            writeFile file: VERSION_FILE, text: newVersion
+                            env.NEW_VERSION = newVersion
+
+                            sh """
+                            git add ${VERSION_FILE}
+                            git status
+                            git commit -m "Increment version to ${newVersion}"
+                            git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/Evgeny-Nik/project_kubernetes_jenkins_docker_ci_cd.git ${GIT_BRANCH}
+                            """
+                        }
                     }
                 }
             }
@@ -111,16 +120,7 @@ pipeline {
 
     post {
         success {
-            withCredentials([usernamePassword(credentialsId: "${GIT_CRED_ID}", usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
-                dir(APP_DIR) {
-                    sh """
-                        git add ${VERSION_FILE}
-                        git status
-                        git commit -m "Increment version to ${newVersion}"
-                        git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/Evgeny-Nik/project_kubernetes_jenkins_docker_ci_cd.git ${GIT_BRANCH}
-                    """
-                }
-            }
+
         }
 
         cleanup {
