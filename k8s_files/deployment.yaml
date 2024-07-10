@@ -20,11 +20,11 @@ spec:
         app: weather-app
     spec:
       containers:
-        - name: weatherapp
-          image: 'evgenyniko/kubernetes_weather_app:1.0.0'
-          imagePullPolicy: Always
-          ports:
-            - containerPort: 8000
-              name: http
-              protocol: TCP
+      - name: weatherapp
+        image: evgenyniko/kubernetes_weather_app:1.0.15
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+          name: http
+          protocol: TCP
       restartPolicy: Always
