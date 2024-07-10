@@ -8,6 +8,7 @@ pipeline {
         PIPELINE_A = 'kubernetes_jenkins_docker_ci'
         PIPELINE_B = 'kubernetes_jenkins_docker_cd'
         VERSION_FILE = 'weather_app/version.txt'
+        MANIFEST_FILE = 'k8s_files/deployment.yaml'
     }
 
     stages {
@@ -30,9 +31,14 @@ pipeline {
 
                     def isOnlyVersionFileChanged = changeLog.size() == 1 && changeLog.contains(VERSION_FILE)
 
-                    def shouldTriggerPipelineA = !isOnlyVersionFileChanged && changeLog.any { filePath ->
-                        filePath.startsWith('weather_app/') || filePath == 'Jenkinsfile_ci'
-                    }
+                    def isOnlyVersionAndDeploymentChanged = changeLog.size() == 2 &&
+                        changeLog.contains(VERSION_FILE) &&
+                        changeLog.contains(MANIFEST_FILE)
+
+                    def shouldTriggerPipelineA = !isOnlyVersionFileChanged && !isOnlyVersionAndDeploymentChanged &&
+                        changeLog.any { filePath ->
+                            filePath.startsWith('weather_app/') || filePath == 'Jenkinsfile_ci'
+                        }
 
                     def shouldTriggerPipelineB = changeLog.any { filePath ->
                         filePath.startsWith('k8s_files/') || filePath == 'Jenkinsfile_cd'
