@@ -33,45 +33,23 @@ pipeline {
             }
         }
 
-    stage('Increment Version') {
-        steps {
-            script {
-                withCredentials([usernamePassword(credentialsId: "${GIT_CRED_ID}", usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
-                    dir('weather_app') {
-                        def version = readFile(VERSION_FILE).trim()
-                        def (major, minor, patch) = version.tokenize('.').collect { it.toInteger() }
-                        patch += 1
-                        def newVersion = "${major}.${minor}.${patch}"
-                        writeFile file: VERSION_FILE, text: newVersion
-                        sh """
-                            git add ${VERSION_FILE}
-                            git commit -m "Increment version to ${newVersion}"
-                            git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/Evgeny-Nik/project_kubernetes_jenkins_docker_ci_cd.git ${GIT_BRANCH}
-                        """
-                        env.NEW_VERSION = newVersion
-                    }
-                }
-            }
-        }
-    }
-
         stage('Increment Version') {
             steps {
                 script {
-                    dir('weather_app') {
-                        def version = readFile(VERSION_FILE).trim()
-                        def (major, minor, patch) = version.tokenize('.').collect { it.toInteger() }
-                        patch += 1
-                        def newVersion = "${major}.${minor}.${patch}"
-                        writeFile file: VERSION_FILE, text: newVersion
-                        sh 'git config user.email $GITHUB_EMAIL'
-                        sh 'git config user.name $GITHUB_USER'
-                        sh """
-                            git add ${VERSION_FILE}
-                            git commit -m "Increment version to ${newVersion}"
-                            git push origin ${GIT_BRANCH}
-                        """
-                        env.NEW_VERSION = newVersion
+                    withCredentials([usernamePassword(credentialsId: "${GIT_CRED_ID}", usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+                        dir('weather_app') {
+                            def version = readFile(VERSION_FILE).trim()
+                            def (major, minor, patch) = version.tokenize('.').collect { it.toInteger() }
+                            patch += 1
+                            def newVersion = "${major}.${minor}.${patch}"
+                            writeFile file: VERSION_FILE, text: newVersion
+                            sh """
+                                git add ${VERSION_FILE}
+                                git commit -m "Increment version to ${newVersion}"
+                                git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/Evgeny-Nik/project_kubernetes_jenkins_docker_ci_cd.git ${GIT_BRANCH}
+                            """
+                            env.NEW_VERSION = newVersion
+                        }
                     }
                 }
             }
