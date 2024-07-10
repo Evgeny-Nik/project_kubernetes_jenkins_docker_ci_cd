@@ -15,10 +15,10 @@ pipeline {
         stage('Clean Workspace') {
             steps {
                 cleanWs()
-                sh """
+                sh '''
                     docker 2>/dev/null rm -f $(docker ps -aq) | true 
                     docker 2>/dev/null rmi $(docker images -aq) | true
-                """
+                '''
             }
         }
 
