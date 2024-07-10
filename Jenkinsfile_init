@@ -10,8 +10,8 @@ pipeline {
         AWS_DEFAULT_REGION = 'eu-north-1'
         TF_VAR_region = 'en-north-1'
         TF_VAR_cluster_name = 'my-eks'
-        TF_BACKEND_BUCKET = credentials('kubernetes-backend-bucket')
-        TF_BACKEND_KEY = credentials('kubernetes-backend-key')
+        TF_BUCKET = credentials('kubernetes-backend-bucket')
+        TF__KEY = credentials('kubernetes-backend-key')
     }
 
     stages {
