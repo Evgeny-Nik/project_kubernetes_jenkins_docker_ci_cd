@@ -1,0 +1,118 @@
+pipeline {
+    agent any
+
+    environment {
+        GIT_REPO = 'https://github.com/Evgeny-Nik/project_kubernetes_jenkins_docker_ci_cd.git'
+        GIT_BRANCH = 'master'
+        GIT_CRED_ID = 'kubernetes_jenkins_docker_github_user_token'
+        DOCKERHUB_USER = credentials('dockerhub_username')
+        DOCKERHUB_PASS = credentials('dockerhub_password')
+        VERSION_FILE = 'version.txt'
+        TEST_FILE = 'tests/website_connectivity_unittest.py'
+    }
+
+    stages {
+        stage('Clean Workspace') {
+            steps {
+                script {
+                    cleanWs()
+                    sh """
+                    docker 2>/dev/null rm -f $(docker ps -aq) | true 
+                    docker 2>/dev/null rmi $(docker images -aq) | true
+                    """
+                }
+            }
+        }
+
+        stage('Prep Workspace') {
+            steps {
+                git branch: "${GIT_BRANCH}", credentialsId: "${GIT_CRED_ID}", url: "${GIT_REPO}"
+                dir('weather_app') {
+                    withCredentials([file(credentialsId: '.env-file', variable: 'ENV_FILE')]) {
+                        writeFile file: '.env', text: readFile(ENV_FILE)
+                    }
+                }
+            }
+        }
+
+        stage('Increment Version') {
+            steps {
+                script {
+                    dir('weather_app') {
+                        def version = readFile(VERSION_FILE).trim()
+                        def (major, minor, patch) = version.tokenize('.').collect { it.toInteger() }
+                        patch += 1
+                        def newVersion = "${major}.${minor}.${patch}"
+                        writeFile file: VERSION_FILE, text: newVersion
+                        sh 'git config user.email "jenkins@example.com"'
+                        sh 'git config user.name "jenkins"'
+                        sh """
+                            git add ${VERSION_FILE}
+                            git commit -m "Increment version to ${newVersion}"
+                            git push origin ${GIT_BRANCH}
+                        """
+                        env.NEW_VERSION = newVersion
+                    }
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    dir('weather_app') {
+                        sh """
+                            docker build -t ${DOCKERHUB_USER}/kubernetes_weather_app:${NEW_VERSION} .
+                            docker tag ${DOCKERHUB_USER}/kubernetes_weather_app:${NEW_VERSION} ${DOCKERHUB_USER}/kubernetes_weather_app:latest
+                            docker images
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Test Application') {
+            steps {
+                dir('weather_app') {
+                    sh "python3 ${TEST_FILE}"
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                sh """
+                    echo ${DOCKERHUB_PASS} | docker login -u ${DOCKERHUB_USER} --password-stdin
+                    docker push ${DOCKERHUB_USER}/kubernetes_weather_app:${NEW_VERSION}
+                    docker push ${DOCKERHUB_USER}/kubernetes_weather_app:latest
+                    docker logout
+                """
+            }
+        }
+
+        stage('Edit Manifest Files') {
+            steps {
+                script {
+                    sh """
+                        yq -i '.spec.template.spec.containers.[].image = "${DOCKERHUB_USER}/kubernetes_weather_app:${NEW_VERSION}"' k8s_files/deployment.yaml
+                        git add k8s_files/deployment.yaml
+                        git commit -m "Update image tag in deployment.yaml to ${DOCKERHUB_USER}/kubernetes_weather_app:${NEW_VERSION}"
+                        git push origin ${GIT_BRANCH}
+                    """
+                }
+            }
+        }
+    }
+    post {
+        always {
+            cleanWs()
+        }
+        success {
+            script {
+                if (changeLog.contains('k8s_files/deployment.yaml')) {
+                    build job: "${PIPELINE_B}", wait: false
+                }
+            }
+        }
+    }
+}

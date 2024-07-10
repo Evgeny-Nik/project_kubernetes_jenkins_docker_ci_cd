@@ -1,0 +1,67 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: weather-app
+  name: weatherapp
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: weather-app
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: weather-app
+    spec:
+      containers:
+        - name: weatherapp
+          image: 'evgenyniko/kubernetes_weather_app:1.0.0'
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+              name: http
+              protocol: TCP
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: weather-app
+  name: weatherapp-service
+spec:
+  ports:
+    - name: http
+      port: 32300
+      protocol: TCP
+      targetPort: 8000
+  selector:
+    app: weather-app
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  labels:
+    app: weather-app
+  name: weatherapp-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: weatherapp.example.com
+      http:
+        paths:
+          - backend:
+              service:
+                name: weatherapp-service
+                port:
+                  number: 32300
+            path: /
+            pathType: Prefix
