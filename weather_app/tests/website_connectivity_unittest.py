@@ -5,7 +5,7 @@ import requests
 class TestCase(unittest.TestCase):
     def test_website_connectivity(self):
         try:
-            response = requests.get("http://localhost:80")
+            response = requests.get("http://localhost:8000")
             self.assertEqual(response.status_code, 200, "Unexpected status code: " + str(response.status_code))
             print("\nRequest successful")
 

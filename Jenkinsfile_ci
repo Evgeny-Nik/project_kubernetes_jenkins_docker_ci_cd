@@ -72,7 +72,13 @@ pipeline {
         stage('Test Application') {
             steps {
                 dir('weather_app') {
-                    sh "python3 ${TEST_FILE}"
+                    sh """
+                        docker run -d --name test_container -p 8000:8000 ${DOCKERHUB_USER}/kubernetes_weather_app:${NEW_VERSION}
+                        sleep 10
+                        python3 ${TEST_FILE}
+                        docker stop test_container
+                        docker rm test_container
+                    """
                 }
             }
         }
@@ -105,7 +111,7 @@ pipeline {
             }
         }
     }
-    
+
     post {
         always {
             cleanWs()
