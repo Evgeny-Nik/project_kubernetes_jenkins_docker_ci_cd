@@ -18,41 +18,46 @@ pipeline {
         stage('Checkout') {
             steps {
                 git branch: "${GIT_BRANCH}", credentialsId: "${GIT_CRED_ID}", url: "${GIT_REPO}"
-                dir('tf_files') {
-                    sh "ls"
-                }
             }
         }
 
         stage('Terraform Init') {
             steps {
-                sh """
-                    ls
-                    terraform init \
-                    -backend-config="bucket=${TF_BUCKET}" \
-                    -backend-config="key=${TF_KEY}"
-                """
+                dir('tf_files') {
+                    sh """
+                        ls
+                        terraform init \
+                        -backend-config="bucket=${TF_BUCKET}" \
+                        -backend-config="key=${TF_KEY}"
+                    """
+                }
             }
         }
 
         stage('Terraform Plan') {
             steps {
-                sh 'terraform plan -out=tfplan'
+                dir('tf_files') {
+                    sh 'terraform plan -out=tfplan'
+                }
             }
         }
 
         stage('Terraform Apply') {
             steps {
-                sh 'terraform apply -auto-approve -input=false tfplan'
+                dir('tf_files') {
+                    sh 'terraform apply -auto-approve -input=false tfplan'
+                }
             }
         }
 
         stage('Post Apply') {
             steps {
                 script {
-                    // Get the EKS cluster name from Terraform output
-                    def clusterName = sh(script: 'terraform output -raw cluster_name', returnStdout: true).trim()
-                    echo "EKS Cluster '${clusterName}' created successfully."
+                    dir('tf_files') {
+                        // Get the EKS cluster name from Terraform output
+                        def clusterName = sh(script: 'terraform output -raw cluster_name', returnStdout: true).trim()
+                        echo "EKS Cluster '${clusterName}' created successfully."
+                    }
                 }
             }
         }
