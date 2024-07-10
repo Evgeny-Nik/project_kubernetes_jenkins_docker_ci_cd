@@ -98,6 +98,7 @@ pipeline {
 
                             sh """
                                 git add deployment.yaml
+                                git status
                                 git commit -m "Update image tag in deployment.yaml to ${DOCKERHUB_USER}/kubernetes_weather_app:${NEW_VERSION}"
                                 git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/Evgeny-Nik/project_kubernetes_jenkins_docker_ci_cd.git ${GIT_BRANCH}
                             """
@@ -114,6 +115,7 @@ pipeline {
                 dir(APP_DIR) {
                     sh """
                         git add ${VERSION_FILE}
+                        git status
                         git commit -m "Increment version to ${newVersion}"
                         git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/Evgeny-Nik/project_kubernetes_jenkins_docker_ci_cd.git ${GIT_BRANCH}
                     """
