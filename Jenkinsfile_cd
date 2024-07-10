@@ -23,11 +23,11 @@ pipeline {
             steps {
                 script {
                     def yamlContent = readYaml(file: MANIFEST_PATH)
-                    def replicas = yamlContent.spec.replicas
+                    replicas = yamlContent.spec.replicas?.toInteger() ?: 1
 
                     // Check if replicas value is valid
-                    if (!replicas.isInteger()) {
-                        error "Replicas value (${replicas}) is not a valid integer."
+                    if (replicas <= 0) {
+                        error "Replicas value (${replicas}) is not valid."
                     }
 
                     // Use replicas value in subsequent steps
