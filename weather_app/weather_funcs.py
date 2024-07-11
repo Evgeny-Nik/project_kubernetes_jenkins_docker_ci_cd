@@ -1,13 +1,11 @@
 """Module for functions to be used in flask app."""
-import os           # for getenv
+import os                       # for getenv
 from datetime import datetime   # for reformatting json date and inserting day of the week
-import requests     # for html requests
-from dotenv import load_dotenv  # to load api_key from .env file together with os.getenv()
-import custom_exceptions       # for self defined exceptions
-import custom_classes   # for self defined api error messages
+import requests                 # for html requests
+import custom_exceptions        # for self defined exceptions
+import custom_classes           # for self defined api error messages
 
-load_dotenv()
-API_KEY = os.getenv('API_KEY')
+API_KEY = os.getenv('API_KEY', 'None')
 # edit these global vars to change the daytime and nighttime values (0-23)
 DAYTIME_HOUR = 7
 NIGHTTIME_HOUR = 19

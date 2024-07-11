@@ -24,14 +24,9 @@ pipeline {
             }
         }
 
-        stage('Prep Workspace') {
+        stage('Clone Repository') {
             steps {
                 git branch: "${GIT_BRANCH}", credentialsId: "${GIT_CRED_ID}", url: "${GIT_REPO}"
-                dir(APP_DIR) {
-                    withCredentials([file(credentialsId: '.env-file', variable: 'ENV_FILE')]) {
-                        writeFile file: '.env', text: readFile(ENV_FILE)
-                    }
-                }
             }
         }
 
