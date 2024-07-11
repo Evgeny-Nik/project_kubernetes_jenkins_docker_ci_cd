@@ -2,35 +2,17 @@
 
 ## Project Overview
 
-This project demonstrates a CI/CD pipeline using Jenkins, Docker, and Kubernetes. \
-It involves setting up an EKS cluster with Terraform, deploying a containerized application, and managing Kubernetes deployments. \
-The goal is to provide a robust pipeline for continuous integration and continuous deployment.
+This project demonstrates a CI/CD pipeline using Jenkins, Docker, and Kubernetes. It involves setting up an EKS cluster with Terraform, deploying a containerized application, and managing Kubernetes deployments. The goal is to provide a robust pipeline for continuous integration and continuous deployment.
 
 ## Application
-This project uses a Flask weather application that communicates with http requests to a remote REST API (visualcrossing) and uses gunicorn as a WSGI. \
-The application is exposed on kubernetes through a ClusterIp service and Ingress.
-
-## Jenkins Agent Requirements
-
-- **Docker**: [Install Docker](https://docs.docker.com/get-docker/)
-- **Kubernetes**: [Install kubectl](https://kubernetes.io/docs/tasks/tools/)
-- **Jenkins**: [Install Jenkins](https://www.jenkins.io/doc/book/installing/)
-- **Terraform**: [Install Terraform](https://www.terraform.io/downloads.html)
-- **AWS CLI**: [Install AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
-- **Java**: [Install Java](https://www.oracle.com/java/technologies/downloads/#java17)
-
-
-### Configure Jenkins
-
-Set up Jenkins with the necessary plugins for Docker, Kubernetes, AWS, and GitHub. \
-Add your pipelines in Jenkins using the provided Jenkinsfiles.
+This project uses a Flask weather application that communicates with HTTP requests to a remote REST API (Visual Crossing) and uses Gunicorn as a WSGI. The application is exposed on Kubernetes through a ClusterIP service and Ingress.
 
 ## Jenkins Pipelines Overview
-There are a total of 4 Jenkins Pipelines
-- init: handles the initialization and provisioning of the AWS infrastructure using Terraform.
-- select: triggered via github webhook, determines which subsequent pipeline (CI or CD) to trigger based on the changes detected in the repository.
-- ci: handles the continuous integration process (and delivery), including building, testing, and pushing Docker images.
-- cd: handles the continuous deployment process, deploying the Docker images to the Kubernetes cluster, exposing them through Ingress.
+There are a total of 4 Jenkins Pipelines:
+- **init**: Handles the initialization and provisioning of the AWS infrastructure using Terraform.
+- **select**: Triggered via GitHub webhook, determines which subsequent pipeline (CI or CD) to trigger based on the changes detected in the repository.
+- **ci**: Handles the continuous integration process (and delivery), including building, testing, and pushing Docker images.
+- **cd**: Handles the continuous deployment process, deploying the Docker images to the Kubernetes cluster, exposing them through Ingress.
 
 ## Pipeline Steps
 
@@ -68,6 +50,46 @@ There are a total of 4 Jenkins Pipelines
 
 ## Versioning Logic
 The project adheres to semantic versioning (Major.Minor.Patch) to ensure a structured and predictable versioning system.
+
+## Reproducing the Project
+
+To reproduce and deploy the application, follow these steps:
+
+1. **Clone the Repository**: Clone the project repository from GitHub:
+    ```bash
+    git clone https://github.com/Evgeny-Nik/project_kubernetes_jenkins_docker_ci_cd.git
+    cd project_kubernetes_jenkins_docker_ci_cd
+    ```
+
+2. **Setup Jenkins**: Install Jenkins and configure the necessary plugins for Docker, Kubernetes, AWS, and GitHub. Add the provided Jenkinsfiles as pipelines in Jenkins.
+
+   #### Jenkins Agent Requirements
+
+   - Docker: [Install Docker](https://docs.docker.com/get-docker/)
+   - Kubernetes: [Install kubectl](https://kubernetes.io/docs/tasks/tools/)
+   - Jenkins: [Install Jenkins](https://www.jenkins.io/doc/book/installing/)
+   - Terraform: [Install Terraform](https://www.terraform.io/downloads.html)
+   - AWS CLI: [Install AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
+   - Java: [Install Java](https://www.oracle.com/java/technologies/downloads/#java17)
+
+#### Configure Jenkins
+
+Set up Jenkins with the necessary plugins for Docker, Kubernetes, AWS, and GitHub. Add your pipelines in Jenkins using the provided Jenkinsfiles.
+
+3. **Initialize Terraform**: Run the `init` pipeline to provision the necessary AWS infrastructure using Terraform.
+
+- Set up a Kubernetes secret on the created EKS cluster
+```
+kubectl create secret generic api-key-secret --from-literal=API_KEY=<your_api_key>
+```
+
+4. **Trigger the Select Pipeline**: Make changes in the repository and push them to trigger the `select` pipeline via a GitHub webhook.
+
+5. **Run CI Pipeline**: If changes are detected in the application or CI-related files, the `ci` pipeline will build, test, and push the Docker image.
+
+6. **Run CD Pipeline**: If changes are detected in the deployment or CD-related files, the `cd` pipeline will deploy the application to the Kubernetes cluster.
+
+7. **Access the Application**: After deployment, access the application through the Ingress endpoint exposed by the Kubernetes cluster.
 
 ## Links
 - [DockerHub Project Registry](https://hub.docker.com/repository/docker/evgenyniko/kubernetes_weather_app)
