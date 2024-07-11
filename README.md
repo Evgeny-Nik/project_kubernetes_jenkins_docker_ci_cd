@@ -3,12 +3,12 @@
 ## Project Overview
 
 This project demonstrates a CI/CD pipeline using Jenkins, Docker, and Kubernetes. \
-It involves setting up an EKS cluster with Terraform, deploying a Containerized application, and managing Kubernetes deployments. \
+It involves setting up an EKS cluster with Terraform, deploying a containerized application, and managing Kubernetes deployments. \
 The goal is to provide a robust pipeline for continuous integration and continuous deployment.
 
 ## Application
-This project uses a Flask weather application that communicates with http requests to a remote REST API (visualcrossing). \
-Exposed on kubernetes through ClusterIp and Ingress.
+This project uses a Flask weather application that communicates with http requests to a remote REST API (visualcrossing) and uses gunicorn as a WSGI. \
+The application is exposed on kubernetes through a ClusterIp service and Ingress.
 
 ## Jenkins Agent Requirements
 
@@ -17,6 +17,7 @@ Exposed on kubernetes through ClusterIp and Ingress.
 - **Jenkins**: [Install Jenkins](https://www.jenkins.io/doc/book/installing/)
 - **Terraform**: [Install Terraform](https://www.terraform.io/downloads.html)
 - **AWS CLI**: [Install AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
+- **Java**: [Install Java](https://www.oracle.com/java/technologies/downloads/#java17)
 
 
 ### Configure Jenkins
