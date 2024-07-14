@@ -92,6 +92,7 @@ Current version: 1.1.0 (see `version.txt`)
 
 ## To Do List
 
+- [ ] Add more extensive flask app tests
 - [ ] Add HTTPS support
 - [ ] Set up history, logging and monitoring functions (MongoDB, Elastik Stack, Prometheu/Loki + Grafana)
 
