@@ -17,8 +17,8 @@ The app handles user requests, retrieves weather data, and displays it on a web 
 
 1. Clone the repository:
    ```sh
-   git clone https://github.com/Evgeny-Nik/project_kubernetes_jenkins_docker_ci_cd
-   cd weather_app
+   git clone https://github.com/Evgeny-Nik/project_aws_lambda_app
+   cd web_app
    ```
 
 2. Create a virtual environment:
@@ -34,11 +34,13 @@ The app handles user requests, retrieves weather data, and displays it on a web 
 
 ## Usage
 
-1. Set the `API_KEY` environment variable to your Visual Crossing API key:
+1. Set the necessary environment variables (e.g., AWS credentials, API endpoints):
    ```sh
-   export API_KEY=your_api_key
+   export AWS_ACCESS_KEY_ID=your_access_key_id
+   export AWS_SECRET_ACCESS_KEY=your_secret_access_key
+   export AWS_REGION=your_aws_region
+   export LAMBDA_FUNCTION_NAME=your_lambda_function_name
    ```
-
 2. Run the Flask app:
    ```sh
    python app.py
