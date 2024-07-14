@@ -7,6 +7,8 @@ This project demonstrates a CI/CD pipeline using Jenkins, Docker, and Kubernetes
 ## Application
 This project uses a Flask weather application that communicates with HTTP requests to a remote REST API (Visual Crossing) and uses Gunicorn as a WSGI. The application is exposed on Kubernetes through a ClusterIP service and Ingress.
 
+- [Weather App README](weather_app/README-weather-app.md)
+
 ## Jenkins Pipelines Overview
 There are a total of 4 Jenkins Pipelines:
 - **init**: Handles the initialization and provisioning of the AWS infrastructure using Terraform.

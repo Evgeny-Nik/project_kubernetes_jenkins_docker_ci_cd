@@ -5,6 +5,7 @@
 !*.tf
 !*.html
 !*.css
+!*.md
 !version.txt
 !requirements.txt
 !.gitignore
