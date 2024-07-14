@@ -64,13 +64,13 @@ To run the app using Docker:
 
 ## Tests
 
-To run the unit tests:
+To run the unit tests (Docker):
 
-1. Ensure the Flask app is running on `http://localhost:8000` (Docker).
+1. Ensure the Flask app is running on `http://localhost:8000`.
 
 2. Run the tests using the `unittest` module:
    ```sh
-   python -m unittest tests/website_connectivity_unittest.py
+   docker exec -it <container_name> python -m unittest tests/website_connectivity_unittest.py
    ```
 
 - This test script checks the connectivity to the Flask app's homepage and verifies the status code, modify it to add your own tests.
